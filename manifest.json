@@ -20,6 +20,8 @@
   "icons": {
           "128": "icon.png" },
 
+"optional_permissions": [ "clipboardRead", "clipboardWrite" ],
+
   "permissions": [
     "http://www.omdbapi.com/*",
     "storage",

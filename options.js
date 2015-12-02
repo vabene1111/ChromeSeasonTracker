@@ -3,23 +3,61 @@
   Author: vabene1111
 
 */
-var userSeriesList = [];
+var userSeriesList, userSettings;
 var popup = true;
 
 document.addEventListener('DOMContentLoaded', function() {
 
     var fileName = location.href.split("/").slice(-1);
-    if (fileName == "options.html") {
+    if (fileName == "options.html" || fileName == "options.html#") {
         popup = false;
     }
 
     loadData();
+    loadSettings();
 
     //click imdb search
     document.getElementById('btn_getImdbData').addEventListener('click', getImdbData);
     document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
 
+    //import/export
+    document.getElementById('btn_exportJSON').addEventListener('click', exportJSON);
+    document.getElementById('btn_importJSON').addEventListener('click', importJSON);
+
+    //settings
+    document.getElementById('check_setting_incognito').addEventListener('change', settingsChanged);
+
+
 });
+
+function loadSettings() {
+    chrome.storage.sync.get("user_settings", function(obj) {
+        if (typeof obj.user_settings === 'undefined' || obj.user_settings === null) {
+            userSettings = {
+                "incognito": 0
+            };
+        } else {
+            userSettings = obj.user_settings;
+
+            document.getElementById('check_setting_incognito').checked = userSettings.incognito;
+
+        }
+    });
+}
+
+function settingsChanged() {
+    var setting_incognito = document.getElementById('check_setting_incognito').checked;
+    userSettings.incognito = setting_incognito;
+
+    chrome.storage.sync.set({
+        'user_settings': userSettings
+    }, function() {
+        //not really do anything anytime you save
+    });
+
+}
+
+
 
 function getImdbData(e) {
     //parse userinput and create API Url tt0364845
@@ -43,7 +81,7 @@ function getImdbData(e) {
 function loadData() {
     chrome.storage.sync.get("series_list", function(obj) {
         if (typeof obj.series_list === 'undefined' || obj.series_list === null) {
-            userSeriesList = [];
+            userSeriesList = {};
         } else {
             userSeriesList = obj.series_list;
         }
@@ -55,10 +93,10 @@ function loadData() {
 
 
         table = document.getElementById('tbl_series');
-        if(popup){
+        if (popup) {
             table.innerHTML = "";
-        }else {
-            table.innerHTML = "<thead><td>Img</td><td>Description</td><td>Action</td><td>Tracker</td></thead>";
+        } else {
+            table.innerHTML = "<thead><td>Img</td><td>Description</td><td>Action</td><td>Tracker</td><td>Open</td></thead>";
         }
 
 
@@ -80,11 +118,12 @@ function loadData() {
 
             //info
             var cell_info = document.createElement('td');
-            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: " + userSeriesList[i].imdbID;
+            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: <a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>" + userSeriesList[i].imdbID + "</a>";
 
-            //delete button
+
+            //delete/url button
             var cell_delete = document.createElement('td');
-            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>Delete</button>";
+            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>Delete</button> <button id='btn_setUrl_" + i + "' class='btn btn-success'>Set URL</button>";
 
             //episode + season tracker
             var cell_tracker = document.createElement('td');
@@ -103,22 +142,30 @@ function loadData() {
                 "</div>" +
                 "</div>";
 
+            //delete button
+            var cell_favURL = document.createElement('td');
+            cell_favURL.innerHTML = "<button id='btn_open_" + i + "' class='btn btn-info'>Open</button>";
+
             row.appendChild(cell_img);
             row.appendChild(cell_info);
             if (!popup) {
                 row.appendChild(cell_delete);
             }
             row.appendChild(cell_tracker);
+            row.appendChild(cell_favURL);
             table.appendChild(row);
 
             if (!popup) {
                 document.getElementById('btn_delete_' + i).addEventListener('click', tableDeleteClick);
+                document.getElementById('btn_setUrl_' + i).addEventListener('click', tableSetUrlClick);
             }
 
             document.getElementById('btn_season_add_' + i).addEventListener('click', tableTrackerClick);
             document.getElementById('btn_season_sub_' + i).addEventListener('click', tableTrackerClick);
             document.getElementById('btn_episode_add_' + i).addEventListener('click', tableTrackerClick);
             document.getElementById('btn_episode_sub_' + i).addEventListener('click', tableTrackerClick);
+
+            document.getElementById('btn_open_' + i).addEventListener('click', openFavURL);
 
             document.getElementById('in_curEpisode_' + i).addEventListener('keyup', tableEpisodeChange);
             document.getElementById('in_curSeason_' + i).addEventListener('keyup', tableSeasonChange);
@@ -127,6 +174,22 @@ function loadData() {
 
     });
 
+}
+
+function openFavURL() {
+    var btn_id = this.id;
+    var i = btn_id.replace('btn_open_', '');
+
+    if (userSettings.incognito) {
+        chrome.windows.create({
+            "url": userSeriesList[i].favURL,
+            "incognito": true
+        });
+    } else {
+        chrome.tabs.create({
+            "url": userSeriesList[i].favURL
+        });
+    }
 }
 
 function tableSeasonChange() {
@@ -162,6 +225,7 @@ function tableTrackerClick() {
         userSeriesList[i] = entry;
         saveChanges();
         loadData();
+
     } else if (btn_id.indexOf("btn_season_sub_") != -1) {
         var i = btn_id.replace('btn_season_sub_', '');
         var entry = userSeriesList[i];
@@ -169,6 +233,7 @@ function tableTrackerClick() {
         userSeriesList[i] = entry;
         saveChanges();
         loadData();
+
     } else if (btn_id.indexOf("btn_episode_add_") != -1) {
         var i = btn_id.replace('btn_episode_add_', '');
         var entry = userSeriesList[i];
@@ -176,6 +241,7 @@ function tableTrackerClick() {
         userSeriesList[i] = entry;
         saveChanges();
         loadData();
+
     } else if (btn_id.indexOf("btn_episode_sub_") != -1) {
         var i = btn_id.replace('btn_episode_sub_', '');
         var entry = userSeriesList[i];
@@ -183,6 +249,7 @@ function tableTrackerClick() {
         userSeriesList[i] = entry;
         saveChanges();
         loadData();
+
     }
 }
 
@@ -194,6 +261,23 @@ function tableDeleteClick(e) {
 
     saveChanges();
     loadData();
+}
+
+function tableSetUrlClick(e) {
+    var btn_id = this.id;
+    var i = btn_id.replace('btn_setUrl_', '');
+
+    var favURL = prompt("Please enter the URL u wish to open when clicking the series image.", userSeriesList[i].favURL);
+    if (favURL != null) {
+
+        var entry = userSeriesList[i];
+        entry.favURL = favURL;
+        userSeriesList[i] = entry;
+        saveChanges();
+        loadData();
+    }
+
+
 }
 
 function saveChanges() {
@@ -243,13 +327,34 @@ function imdbCallback(jsonString) {
         "imdbID": jsonObject.imdbID,
         "Poster": jsonObject.Poster,
         "Season": 1,
-        "Episode": 1
+        "Episode": 1,
+        "favURL": ""
     };
 
     userSeriesList.push(strippedJsonObject);
     saveChanges();
     loadData();
 
+}
+
+function exportJSON() {
+    document.getElementById('txt_IOData').value = JSON.stringify(userSeriesList);;
+
+    var copyDiv = document.getElementById('txt_IOData');
+    copyDiv.focus();
+    document.execCommand('SelectAll');
+    document.execCommand("Copy", false, null);
+
+}
+
+function importJSON() {
+    var jsonString = document.getElementById('txt_IOData').value;
+    userSeriesList = JSON.parse(jsonString);
+
+    saveChanges();
+    loadData();
+
+    document.getElementById('txt_IOData').value = "";
 }
 
 function clearStorage() {

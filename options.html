@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Add new series</title>
+    <title>Season Tracker Options</title>
     <link rel="icon" type="image/png" href="icon.png" />
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
@@ -12,15 +12,24 @@
 
 <body>
     <div class="container">
-        <div class="nav nav-inverse">
-            Season Tracker
-        </div>
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
 
+                    <a class="navbar-brand" href="#">Season Tracker</a>
+                </div>
+
+            </div>
+        </nav>
+        <br/>
+        <br/>
+        <br/>
 
         <div class="form-inline">
             <input type="text" id="in_seriesId" placeholder="IMDB Id" class="form-control">
             <button id='btn_getImdbData' class="btn btn-primary">Add series</button>
-            <button id='btn_clearStorage' class="btn btn-warning">DEBUG clear storage</button>
+            <button id='btn_clearStorage' class="btn btn-danger">Delete All</button>
+
         </div>
 
         <hr/>
@@ -29,11 +38,22 @@
 
         <table id="tbl_series" class="table table-hover table-bordered">
         </table>
-
         <hr/>
-        Plugin by <a href="mailto:vabene1234@googlemail.com">vaBene1111</a> -
-        <a href="">GitHub</a> -
-        Icon made by <a href="http://www.flaticon.com/authors/freepik" target="_blank">freepik</a> from <a href="http://www.flaticon.com/" target="_blank">www.flaticon.com</a>
+        <h3>Import / Export</h3>
+        <textarea class="form-control" id="txt_IOData" placeholder="Data for import and export" rows="5"></textarea>
+        <br/>
+        <button id='btn_exportJSON' class="btn btn-success">Export JSON to Clipboard</button>
+        <button id='btn_importJSON' class="btn btn-info">Import JSON from Clipboard</button>
+        <hr/>
+        <h3>Settings</h3>
+        <input type="checkbox" id="check_setting_incognito"> Open custom URL in incognito Tab
+
+
+        <hr/> Extension by <a href="mailto:vabene1234@googlemail.com">vaBene1111</a> -
+        <a href="https://github.com/vabene1111/ChromeSeasonTracker">GitHub</a> - Icon made by <a href="http://www.flaticon.com/authors/freepik" target="_blank">freepik</a> from <a href="http://www.flaticon.com/" target="_blank">www.flaticon.com</a>
+        <br/>
+        <br/>
+        <br/>
     </div>
 
 
