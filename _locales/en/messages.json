@@ -1,0 +1,9 @@
+{
+        "manifest_desc": {
+          "message": "Saves the curretn Season and Episode for all your series"
+      },
+
+      "manifest_name": {
+        "message": "Season Tracker"
+      }
+}
