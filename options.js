@@ -3,7 +3,8 @@
   Author: vabene1111
 
 */
-var userSeriesList, userSettings;
+var userSeriesList = [];
+var userSettings = {};
 var popup = true;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -81,7 +82,7 @@ function getImdbData(e) {
 function loadData() {
     chrome.storage.sync.get("series_list", function(obj) {
         if (typeof obj.series_list === 'undefined' || obj.series_list === null) {
-            userSeriesList = {};
+            userSeriesList = [];
         } else {
             userSeriesList = obj.series_list;
         }
