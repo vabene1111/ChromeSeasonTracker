@@ -5,7 +5,9 @@
 */
 var userSeriesList = [];
 var userSettings = {};
+var newEpisodes = [];
 var popup = true;
+
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -30,6 +32,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 });
+
+function searchNew() {
+
+    for (i = 0; i < userSeriesList.length; i++) {
+
+        var searchUrl = "http://www.omdbapi.com/?i=" + userSeriesList[i].imdbID + "&Season=" + userSeriesList[i].Season;
+        console.log(searchUrl);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", searchUrl, true);
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4) {
+                var jsObj = JSON.parse(this.responseText);
+
+                var lPos = jsObj.Episodes.length - 1;
+                var date = new Date(String(jsObj.Episodes[lPos].Released));
+
+                document.getElementById('lbl_newEpisode_' + this.data).innerHTML = date.toLocaleDateString() + " - " + jsObj.Episodes[lPos].Episode;
+            }
+        }
+        xhr.data = i;
+        xhr.send();
+
+    }
+
+}
 
 function loadSettings() {
     chrome.storage.sync.get("user_settings", function(obj) {
@@ -91,8 +119,6 @@ function loadData() {
             document.getElementById('lbl_imdbJsonIds').innerHTML = "Bytes: " + bytes + " Count: " + userSeriesList.length;
         })
 
-
-
         table = document.getElementById('tbl_series');
         if (popup) {
             table.innerHTML = "";
@@ -119,8 +145,7 @@ function loadData() {
 
             //info
             var cell_info = document.createElement('td');
-            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: <a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>" + userSeriesList[i].imdbID + "</a>";
-
+            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: <a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>" + userSeriesList[i].imdbID + "</a><br/> <label id='lbl_newEpisode_" + i + "'> nichts neues</label>";
 
             //delete/url button
             var cell_delete = document.createElement('td');
@@ -172,7 +197,8 @@ function loadData() {
             document.getElementById('in_curSeason_' + i).addEventListener('keyup', tableSeasonChange);
         }
 
-
+        //get all new episodes
+        searchNew();
     });
 
 }
