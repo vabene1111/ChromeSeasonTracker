@@ -16,7 +16,7 @@
             <div class="container">
                 <div class="navbar-header">
 
-                    <a class="navbar-brand" href="#">Season Tracker</a>
+                    <a class="navbar-brand" href="#" id="info_title"></a>
                 </div>
 
             </div>
@@ -26,9 +26,9 @@
         <br/>
 
         <div class="form-inline">
-            <input type="text" id="in_seriesId" placeholder="IMDB Id" class="form-control">
+            <input type="text" id="in_seriesId" placeholder="IMDB Id (tt1234567)" class="form-control">
             <button id='btn_getImdbData' class="btn btn-primary">Add series</button>
-            <button id='btn_clearStorage' class="btn btn-danger">Delete All</button>
+            <!--<button id='btn_clearStorage' class="btn btn-danger">Delete All</button>-->
 
         </div>
 
@@ -42,11 +42,11 @@
         <h3>Import / Export</h3>
         <textarea class="form-control" id="txt_IOData" placeholder="Data for import and export" rows="5"></textarea>
         <br/>
-        <button id='btn_exportJSON' class="btn btn-success">Export JSON to Clipboard</button>
-        <button id='btn_importJSON' class="btn btn-info">Import JSON from Clipboard</button>
+        <button id='btn_exportJSON' class="btn btn-success"></button>
+        <button id='btn_importJSON' class="btn btn-info"></button>
         <hr/>
-        <h3>Settings</h3>
-        <input type="checkbox" id="check_setting_incognito"> Open custom URL in incognito Tab
+        <h3 id="h_settings">Settings</h3>
+        <input type="checkbox" id="check_setting_incognito"> <label id="lbl_settings_icognito"></label>
 
 
         <hr/> Extension by <a href="mailto:vabene1234@googlemail.com">vaBene1111</a> -

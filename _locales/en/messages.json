@@ -5,5 +5,53 @@
 
       "manifest_name": {
         "message": "Season Tracker"
+      },
+      "info_empty": {
+          "message": "To add Series please use the settings page"
+      },
+      "info_settings_incognito": {
+          "message": "Open custom URL in private Window"
+      },
+      "info_importExport": {
+          "message": "copy/paste dada for import/export"
+      },
+      "string_settings": {
+          "message": "Settings"
+      },
+      "string_export": {
+          "message": "Export JSON data"
+      },
+      "string_import": {
+          "message": "Import JSON data"
+      },
+      "string_addIMDB": {
+          "message": "Add Series"
+      },
+      "string_poster": {
+          "message": "Poster"
+      },
+      "string_desc": {
+          "message": "Description"
+      },
+      "string_action": {
+          "message": "Action"
+      },
+      "string_tracker": {
+          "message": "Tracker"
+      },
+      "string_open": {
+          "message": "Open"
+      },
+      "string_delete": {
+          "message": "Delete"
+      },
+      "string_setURL": {
+          "message": "Set URL"
+      },
+      "string_nothingNew": {
+          "message": "nothing new"
       }
+
+
+
 }

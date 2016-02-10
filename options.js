@@ -17,11 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     loadData();
+    loadStrings();
     loadSettings();
 
     //click imdb search
     document.getElementById('btn_getImdbData').addEventListener('click', getImdbData);
-    document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
+    //document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
 
     //import/export
     document.getElementById('btn_exportJSON').addEventListener('click', exportJSON);
@@ -30,8 +31,25 @@ document.addEventListener('DOMContentLoaded', function() {
     //settings
     document.getElementById('check_setting_incognito').addEventListener('change', settingsChanged);
 
-
 });
+
+function loadStrings() {
+    //title
+    document.getElementById('info_title').innerHTML = chrome.i18n.getMessage("manifest_name");
+
+    //import/export
+    document.getElementById('txt_IOData').setAttribute('placeholder',chrome.i18n.getMessage("info_importExport"));
+    document.getElementById('btn_exportJSON').innerHTML = chrome.i18n.getMessage("string_export");
+    document.getElementById('btn_importJSON').innerHTML = chrome.i18n.getMessage("string_import");
+
+    //buttons
+    document.getElementById('btn_getImdbData').innerHTML = chrome.i18n.getMessage("string_addIMDB");
+
+    //settigns
+    document.getElementById('h_settings').innerHTML = chrome.i18n.getMessage("string_settings");
+    document.getElementById('lbl_settings_icognito').innerHTML = chrome.i18n.getMessage("info_settings_incognito");
+
+}
 
 function searchNew() {
 
@@ -94,7 +112,6 @@ function getImdbData(e) {
 
     var url = "http://www.omdbapi.com/?i=" + imdbId + "&plot=short&r=json";
 
-
     //initiate XMLHttpRequest
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
@@ -104,6 +121,7 @@ function getImdbData(e) {
         }
     }
     xhr.send();
+
 
 }
 
@@ -123,7 +141,12 @@ function loadData() {
         if (popup) {
             table.innerHTML = "";
         } else {
-            table.innerHTML = "<thead><td>Img</td><td>Description</td><td>Action</td><td>Tracker</td><td>Open</td></thead>";
+            var poster = chrome.i18n.getMessage("string_poster");
+            var desc = chrome.i18n.getMessage("string_desc");
+            var action = chrome.i18n.getMessage("string_action");
+            var tracker = chrome.i18n.getMessage("string_tracker");
+            var open = chrome.i18n.getMessage("string_open");
+            table.innerHTML = "<thead><td>" + poster + "</td><td>" + desc + "</td><td>" + action + "</td><td>" + tracker + "</td><td>" + open + "</td></thead>";
         }
 
 
@@ -145,11 +168,11 @@ function loadData() {
 
             //info
             var cell_info = document.createElement('td');
-            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: <a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>" + userSeriesList[i].imdbID + "</a><br/> <label id='lbl_newEpisode_" + i + "'> nichts neues</label>";
+            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: <a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>" + userSeriesList[i].imdbID + "</a><br/> <label id='lbl_newEpisode_" + i + "'>" + chrome.i18n.getMessage("string_nothingNew") + "</label>";
 
             //delete/url button
             var cell_delete = document.createElement('td');
-            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>Delete</button> <button id='btn_setUrl_" + i + "' class='btn btn-success'>Set URL</button>";
+            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> <button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL"); + "</button>";
 
             //episode + season tracker
             var cell_tracker = document.createElement('td');
@@ -168,9 +191,9 @@ function loadData() {
                 "</div>" +
                 "</div>";
 
-            //delete button
+            //open Button
             var cell_favURL = document.createElement('td');
-            cell_favURL.innerHTML = "<button id='btn_open_" + i + "' class='btn btn-info'>Open</button>";
+            cell_favURL.innerHTML = "<button id='btn_open_" + i + "' class='btn btn-info'>" + chrome.i18n.getMessage("string_open"); + "</button>";
 
             row.appendChild(cell_img);
             row.appendChild(cell_info);
@@ -197,10 +220,22 @@ function loadData() {
             document.getElementById('in_curSeason_' + i).addEventListener('keyup', tableSeasonChange);
         }
 
+        if (popup && userSeriesList.length < 1) {
+            table.innerHTML = chrome.i18n.getMessage("info_empty") + " <button id='btn_empty_options' class='btn btn-info'>" + chrome.i18n.getMessage("string_settings") + "</button>";
+            document.getElementById('btn_empty_options').addEventListener('click', openSettings);
+        }
+
         //get all new episodes
         searchNew();
     });
 
+}
+
+function openSettings() {
+
+    chrome.tabs.create({
+        'url': 'chrome-extension://' + chrome.runtime.id + "/options.html"
+    });
 }
 
 function openFavURL() {

@@ -1,5 +1,54 @@
 {
-        "manifest_desc": {
-          "message": "Speichert die Aktuelle Staffel und Episode einer Serie"
-        }
+    "manifest_desc": {
+        "message": "Speichert die Aktuelle Staffel und Episode einer Serie"
+    },
+
+    "manifest_name": {
+        "message": "Season Tracker"
+    },
+    "info_empty": {
+        "message": "Um Serien hinzuzufügen nutzen sie bitte die Options Seite"
+    },
+    "info_settings_incognito": {
+        "message": "Öffnet URL in privatem Fenster"
+    },
+    "info_importExport": {
+        "message": "Daten für Import/Export"
+    },
+    "string_settings": {
+        "message": "Einstellungen"
+    },
+    "string_export": {
+        "message": "Exportier JSON Daten"
+    },
+    "string_import": {
+        "message": "Importier JSON Daten"
+    },
+    "string_addIMDB": {
+        "message": "Serie hinzufügen"
+    },
+    "string_poster": {
+        "message": "Poster"
+    },
+    "string_desc": {
+        "message": "Beschreibung"
+    },
+    "string_action": {
+        "message": "Aktion"
+    },
+    "string_tracker": {
+        "message": "Tracker"
+    },
+    "string_open": {
+        "message": "Öffnen"
+    },
+    "string_delete": {
+        "message": "Löschen"
+    },
+    "string_setURL": {
+        "message": "URL ändern"
+    },
+    "string_nothingNew": {
+        "message": "nichts neues"
+    }
 }
