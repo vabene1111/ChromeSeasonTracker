@@ -19,36 +19,45 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
     loadStrings();
     loadSettings();
+    setupEVH();
 
-    //click imdb search
-    document.getElementById('btn_getImdbData').addEventListener('click', getImdbData);
-    //document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
-
-    //import/export
-    document.getElementById('btn_exportJSON').addEventListener('click', exportJSON);
-    document.getElementById('btn_importJSON').addEventListener('click', importJSON);
-
-    //settings
-    document.getElementById('check_setting_incognito').addEventListener('change', settingsChanged);
 
 });
 
+function setupEVH() {
+    if(!popup){
+        //click imdb search
+        document.getElementById('btn_getImdbData').addEventListener('click', getImdbData);
+        //document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
+
+        //import/export
+        document.getElementById('btn_exportJSON').addEventListener('click', exportJSON);
+        document.getElementById('btn_importJSON').addEventListener('click', importJSON);
+
+        //settings
+        document.getElementById('check_setting_incognito').addEventListener('change', settingsChanged);
+    }
+
+}
+
+
 function loadStrings() {
-    //title
-    document.getElementById('info_title').innerHTML = chrome.i18n.getMessage("manifest_name");
+    if(!popup){
+        //title
+        document.getElementById('info_title').innerHTML = chrome.i18n.getMessage("manifest_name");
 
-    //import/export
-    document.getElementById('txt_IOData').setAttribute('placeholder',chrome.i18n.getMessage("info_importExport"));
-    document.getElementById('btn_exportJSON').innerHTML = chrome.i18n.getMessage("string_export");
-    document.getElementById('btn_importJSON').innerHTML = chrome.i18n.getMessage("string_import");
+        //import/export
+        document.getElementById('txt_IOData').setAttribute('placeholder',chrome.i18n.getMessage("info_importExport"));
+        document.getElementById('btn_exportJSON').innerHTML = chrome.i18n.getMessage("string_export");
+        document.getElementById('btn_importJSON').innerHTML = chrome.i18n.getMessage("string_import");
 
-    //buttons
-    document.getElementById('btn_getImdbData').innerHTML = chrome.i18n.getMessage("string_addIMDB");
+        //buttons
+        document.getElementById('btn_getImdbData').innerHTML = chrome.i18n.getMessage("string_addIMDB");
 
-    //settigns
-    document.getElementById('h_settings').innerHTML = chrome.i18n.getMessage("string_settings");
-    document.getElementById('lbl_settings_icognito').innerHTML = chrome.i18n.getMessage("info_settings_incognito");
-
+        //settigns
+        document.getElementById('h_settings').innerHTML = chrome.i18n.getMessage("string_settings");
+        document.getElementById('lbl_settings_icognito').innerHTML = chrome.i18n.getMessage("info_settings_incognito");
+    }
 }
 
 function searchNew() {
@@ -56,7 +65,6 @@ function searchNew() {
     for (i = 0; i < userSeriesList.length; i++) {
 
         var searchUrl = "http://www.omdbapi.com/?i=" + userSeriesList[i].imdbID + "&Season=" + userSeriesList[i].Season;
-        console.log(searchUrl);
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", searchUrl, true);
@@ -64,10 +72,14 @@ function searchNew() {
             if (this.readyState == 4) {
                 var jsObj = JSON.parse(this.responseText);
 
-                var lPos = jsObj.Episodes.length - 1;
-                var date = new Date(String(jsObj.Episodes[lPos].Released));
+                //check if response is valid
+                if(jsObj.Response == "True"){
+                    var lPos = jsObj.Episodes.length - 1;
+                    var date = new Date(String(jsObj.Episodes[lPos].Released));
 
-                document.getElementById('lbl_newEpisode_' + this.data).innerHTML = date.toLocaleDateString() + " - " + jsObj.Episodes[lPos].Episode;
+                    document.getElementById('lbl_newEpisode_' + this.data).innerHTML = date.toLocaleDateString() + " - " + jsObj.Episodes[lPos].Episode;
+                }
+
             }
         }
         xhr.data = i;
@@ -133,14 +145,15 @@ function loadData() {
             userSeriesList = obj.series_list;
         }
 
-        chrome.storage.sync.getBytesInUse(function(bytes) {
-            document.getElementById('lbl_imdbJsonIds').innerHTML = "Bytes: " + bytes + " Count: " + userSeriesList.length;
-        })
-
         table = document.getElementById('tbl_series');
         if (popup) {
             table.innerHTML = "";
         } else {
+            chrome.storage.sync.getBytesInUse(function(bytes) {
+                document.getElementById('lbl_imdbJsonIds').innerHTML = "Bytes: " + bytes + " Count: " + userSeriesList.length;
+            })
+
+
             var poster = chrome.i18n.getMessage("string_poster");
             var desc = chrome.i18n.getMessage("string_desc");
             var action = chrome.i18n.getMessage("string_action");
@@ -239,6 +252,8 @@ function openSettings() {
 }
 
 function openFavURL() {
+
+
     var btn_id = this.id;
     var i = btn_id.replace('btn_open_', '');
 
