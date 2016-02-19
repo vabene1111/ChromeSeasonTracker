@@ -12,8 +12,17 @@
       "info_settings_incognito": {
           "message": "Open custom URL in private Window"
       },
+      "info_settings_useIMDB": {
+          "message": "Use IMDB instead of tvmaze"
+      },
       "info_importExport": {
           "message": "copy/paste dada for import/export"
+      },
+      "info_newData": {
+          "message": "New Data will be loaded in 10 Seconds"
+      },
+      "info_dataChanged": {
+          "message": "The page will be reloaded in 10 Seconds because some data needs too be refreshed"
       },
       "string_settings": {
           "message": "Settings"
@@ -50,6 +59,15 @@
       },
       "string_nothingNew": {
           "message": "nothing new"
+      },
+      "string_nextEpisode": {
+          "message": "next episode: "
+      },
+      "string_nextSeason": {
+          "message": "next season: "
+      },
+      "string_refreshInfo": {
+          "message": "Refresh Series"
       }
 
 

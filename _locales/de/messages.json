@@ -12,8 +12,17 @@
     "info_settings_incognito": {
         "message": "Öffnet URL in privatem Fenster"
     },
+    "info_settings_useIMDB": {
+        "message": "Benutze IMDB anstelle von TVmaze"
+    },
     "info_importExport": {
         "message": "Daten für Import/Export"
+    },
+    "info_newData": {
+        "message": "Neue Daten werden in 10 Sekunden geladen"
+    },
+    "info_dataChanged": {
+        "message": "Die seite wird in 10 Sekunden neu geladen, da ein Update einige Daten geändert hat"
     },
     "string_settings": {
         "message": "Einstellungen"
@@ -50,5 +59,14 @@
     },
     "string_nothingNew": {
         "message": "nichts neues"
+    },
+    "string_nextEpisode": {
+        "message": "n. Episode: "
+    },
+    "string_nextSeason": {
+        "message": "n. Saison: "
+    },
+    "string_refreshInfo": {
+        "message": "Serien Aktualisieren"
     }
 }

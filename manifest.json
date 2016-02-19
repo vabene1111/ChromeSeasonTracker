@@ -24,6 +24,7 @@
 
   "permissions": [
     "http://www.omdbapi.com/*",
+    "http://api.tvmaze.com/*",
     "storage",
     "tabs"
   ]

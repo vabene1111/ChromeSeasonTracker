@@ -16,19 +16,24 @@ document.addEventListener('DOMContentLoaded', function() {
         popup = false;
     }
 
+
     loadData();
     loadStrings();
     loadSettings();
     setupEVH();
-
-
 });
+
+/*
+    localization and event handlers
+*/
 
 function setupEVH() {
     if(!popup){
         //click imdb search
-        document.getElementById('btn_getImdbData').addEventListener('click', getImdbData);
+        document.getElementById('btn_getImdbData').addEventListener('click', getSeriesData);
         //document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
+        document.getElementById('btn_refreshInfo').addEventListener('click', refreshInfo);
+
 
         //import/export
         document.getElementById('btn_exportJSON').addEventListener('click', exportJSON);
@@ -36,10 +41,10 @@ function setupEVH() {
 
         //settings
         document.getElementById('check_setting_incognito').addEventListener('change', settingsChanged);
+        document.getElementById('check_setting_useIMDB').addEventListener('change', settingsChanged);
     }
 
 }
-
 
 function loadStrings() {
     if(!popup){
@@ -53,33 +58,36 @@ function loadStrings() {
 
         //buttons
         document.getElementById('btn_getImdbData').innerHTML = chrome.i18n.getMessage("string_addIMDB");
+        document.getElementById('btn_refreshInfo').innerHTML = chrome.i18n.getMessage("string_refreshInfo");
 
         //settigns
         document.getElementById('h_settings').innerHTML = chrome.i18n.getMessage("string_settings");
         document.getElementById('lbl_settings_icognito').innerHTML = chrome.i18n.getMessage("info_settings_incognito");
+        document.getElementById('lbl_settings_useIMDB').innerHTML = chrome.i18n.getMessage("info_settings_useIMDB");
     }
 }
 
+/*
+    get new episode dates
+*/
 function searchNew() {
 
     for (i = 0; i < userSeriesList.length; i++) {
 
-        var searchUrl = "http://www.omdbapi.com/?i=" + userSeriesList[i].imdbID + "&Season=" + userSeriesList[i].Season;
+        var searchUrl = "http://api.tvmaze.com/shows/" + userSeriesList[i].tvmazeID + "/episodebynumber?season=" + userSeriesList[i].Season + "&number=" + (userSeriesList[i].Episode + 1);
+
 
         var xhr = new XMLHttpRequest();
         xhr.open("GET", searchUrl, true);
         xhr.onreadystatechange = function() {
-            if (this.readyState == 4) {
+            if (this.readyState == 4 && this.status == 200) {
                 var jsObj = JSON.parse(this.responseText);
 
-                //check if response is valid
-                if(jsObj.Response == "True"){
-                    var lPos = jsObj.Episodes.length - 1;
-                    var date = new Date(String(jsObj.Episodes[lPos].Released));
+                    var date = new Date(String(jsObj.airdate));
+                    document.getElementById('lbl_newEpisode_' + this.data).innerHTML = chrome.i18n.getMessage("string_nextEpisode") + date.toLocaleDateString();
 
-                    document.getElementById('lbl_newEpisode_' + this.data).innerHTML = date.toLocaleDateString() + " - " + jsObj.Episodes[lPos].Episode;
-                }
-
+            }if(this.readyState == 4 && this.status == 404){
+                searchRetry(this.data);
             }
         }
         xhr.data = i;
@@ -89,54 +97,29 @@ function searchNew() {
 
 }
 
-function loadSettings() {
-    chrome.storage.sync.get("user_settings", function(obj) {
-        if (typeof obj.user_settings === 'undefined' || obj.user_settings === null) {
-            userSettings = {
-                "incognito": 0
-            };
-        } else {
-            userSettings = obj.user_settings;
+function searchRetry(i){
 
-            document.getElementById('check_setting_incognito').checked = userSettings.incognito;
+    var nextSeason = parseInt(userSeriesList[i].Season) + 1;
+    var searchRetryUrl = "http://api.tvmaze.com/shows/" + userSeriesList[i].tvmazeID + "/episodebynumber?season=" + nextSeason + "&number=" + 1;
 
-        }
-    });
-}
+    var xhrRetry = new XMLHttpRequest();
+    xhrRetry.open("GET", searchRetryUrl, true);
+    xhrRetry.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var jsObj = JSON.parse(this.responseText);
 
-function settingsChanged() {
-    var setting_incognito = document.getElementById('check_setting_incognito').checked;
-    userSettings.incognito = setting_incognito;
+            var date = new Date(String(jsObj.airdate));
+            document.getElementById('lbl_newEpisode_' + this.data).innerHTML = chrome.i18n.getMessage("string_nextSeason") + date.toLocaleDateString();
 
-    chrome.storage.sync.set({
-        'user_settings': userSettings
-    }, function() {
-        //not really do anything anytime you save
-    });
-
-}
-
-
-
-function getImdbData(e) {
-    //parse userinput and create API Url tt0364845
-    var imdbId = document.getElementById("in_seriesId").value;
-
-    var url = "http://www.omdbapi.com/?i=" + imdbId + "&plot=short&r=json";
-
-    //initiate XMLHttpRequest
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-            imdbCallback(xhr.responseText);
         }
     }
-    xhr.send();
-
-
+    xhrRetry.data = i;
+    xhrRetry.send();
 }
 
+/*
+    main loading function
+*/
 function loadData() {
     chrome.storage.sync.get("series_list", function(obj) {
         if (typeof obj.series_list === 'undefined' || obj.series_list === null) {
@@ -181,7 +164,7 @@ function loadData() {
 
             //info
             var cell_info = document.createElement('td');
-            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>IMDB Id: <a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>" + userSeriesList[i].imdbID + "</a><br/> <label id='lbl_newEpisode_" + i + "'>" + chrome.i18n.getMessage("string_nothingNew") + "</label>";
+            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/><a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>IMDB</a> - <a target='_blank' href='http://www.tvmaze.com/shows/" + userSeriesList[i].tvmazeID + "'>TVmaze</a><br/> <label id='lbl_newEpisode_" + i + "'>" + chrome.i18n.getMessage("string_nothingNew") + "</label>";
 
             //delete/url button
             var cell_delete = document.createElement('td');
@@ -235,20 +218,19 @@ function loadData() {
 
         if (popup && userSeriesList.length < 1) {
             table.innerHTML = chrome.i18n.getMessage("info_empty") + " <button id='btn_empty_options' class='btn btn-info'>" + chrome.i18n.getMessage("string_settings") + "</button>";
-            document.getElementById('btn_empty_options').addEventListener('click', openSettings);
+            document.getElementById('btn_empty_options').addEventListener('click', openOptionsPage);
         }
 
-        //get all new episodes
-        searchNew();
+
+        if(checkTvmazeID()){
+            alert(chrome.i18n.getMessage("info_dataChanged"));
+            setTimeout(function(){loadData}, 10000);
+        }else{
+            searchNew();
+        }
+
     });
 
-}
-
-function openSettings() {
-
-    chrome.tabs.create({
-        'url': 'chrome-extension://' + chrome.runtime.id + "/options.html"
-    });
 }
 
 function openFavURL() {
@@ -357,6 +339,126 @@ function tableSetUrlClick(e) {
 
 }
 
+/*
+    functions for IMDB integration
+*/
+
+function imdbCallback(jsonString,instant) {
+    var jsonObject = JSON.parse(jsonString);
+
+    if (typeof jsonObject.Title === 'undefined' || jsonObject.Title === null) {
+        alert("No valid Information found!");
+        return;
+    }
+
+    for (i = 0; i<userSeriesList.length; i++){
+        if(userSeriesList[i].imdbID == jsonObject.imdbID){
+            userSeriesList[i].Title = jsonObject.Title;
+            userSeriesList[i].Poster = jsonObject.Poster;
+
+            getTvmazeInfo(userSeriesList[i].imdbID,instant);
+        }
+    }
+}
+
+function getSeriesData(e) {
+    //parse userinput and create API Url tt0364845
+    var imdbId = document.getElementById("in_seriesId").value;
+
+    var strippedJsonObject = {
+        "Title": "",
+        "imdbID": imdbId,
+        "Poster": "",
+        "Season": 1,
+        "Episode": 1,
+        "tvmazeID": 0,
+        "favURL": ""
+    };
+
+    userSeriesList.push(strippedJsonObject);
+
+    if(userSettings.useIMDB){
+        getImdbInfo(imdbId,true);
+    }else{
+        getTvmazeInfo(imdbId,true);
+    }
+
+}
+
+/*
+    function for tvmaze integration
+*/
+
+function getImdbInfo(imdbId, instant){
+    var url = "http://www.omdbapi.com/?i=" + imdbId + "&plot=short&r=json";
+
+    //initiate XMLHttpRequest
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            imdbCallback(xhr.responseText,this.data);
+        }
+    }
+    xhr.data = instant;
+    xhr.send();
+}
+
+function getTvmazeInfo(imdbId, instant){
+
+    var url = "http://api.tvmaze.com/lookup/shows?imdb=" + imdbId;
+
+    //initiate XMLHttpRequest
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            tvmazeCallback(xhr.responseText,this.data);
+        }
+    }
+    xhr.data = instant;
+    xhr.send();
+
+}
+
+function tvmazeCallback(jsonString,instant){
+    var jsonObject = JSON.parse(jsonString);
+
+    for (i = 0; i<userSeriesList.length; i++){
+        if(userSeriesList[i].imdbID == jsonObject.externals.imdb){
+            userSeriesList[i].tvmazeID = jsonObject.id;
+            if(!userSettings.useIMDB){
+                userSeriesList[i].Title = jsonObject.name;
+                userSeriesList[i].Poster = jsonObject.image.medium;
+            }
+        }
+    }
+
+    saveChanges();
+
+    if(instant){
+        loadData();
+    }
+}
+
+
+function checkTvmazeID(){
+    missing = false;
+    for (i = 0; i < userSeriesList.length; i++) {
+        if(userSettings.useIMDB){
+            getImdbInfo(userSeriesList[i].imdbID,false);
+        }else{
+            getTvmazeInfo(userSeriesList[i].imdbID,false);
+        }
+    }
+
+    return missing;
+}
+
+/*
+    functions for loading and saving
+*/
+
 function saveChanges() {
 
     // Save it using the Chrome extension storage API.
@@ -367,53 +469,66 @@ function saveChanges() {
     });
 }
 
-function imdbCallback(jsonString) {
-    var jsonObject = JSON.parse(jsonString);
+function loadSettings() {
+    chrome.storage.sync.get("user_settings", function(obj) {
+        if (typeof obj.user_settings === 'undefined' || obj.user_settings === null) {
+            userSettings = {
+                "incognito": 0,
+                "useIMDB": 0
+            };
+        } else {
+            userSettings = obj.user_settings;
 
-    /*
-    Information we get from the JSON Api:
-    {"Title":"NCIS",
-    "Year":"2003–",
-    "Rated":"TV-14",
-    "Released":"23 Sep 2003",
-    "Runtime":"60 min",
-    "Genre":"Action, Comedy, Crime",
-    "Director":"N/A",
-    "Writer":"Donald P. Bellisario, Don McGill",
-    "Actors":"Mark Harmon, Michael Weatherly, Pauley Perrette, David McCallum",
-    "Plot":"The cases of the Naval Criminal Investigative Service's Washington DC Major Case Response Team, led by Special Agent Leroy Jethro Gibbs.",
-    "Language":"English",
-    "Country":"USA",
-    "Awards":"Nominated for 3 Primetime Emmys. Another 18 wins & 26 nominations.",
-    "Poster":"http://ia.media-imdb.com/images/M/MV5BMTYyMTQ0MTU1OF5BMl5BanBnXkFtZTcwMjI0Njg4Ng@@._V1_SX300.jpg",
-    "Metascore":"N/A",
-    "imdbRating":"8.0",
-    "imdbVotes":"79,101",
-    "imdbID":"tt0364845",
-    "Type":"series",
-    "Response":"True"}
-    */
+            if(!popup){
+                document.getElementById('check_setting_incognito').checked = userSettings.incognito;
+                document.getElementById('check_setting_useIMDB').checked = userSettings.useIMDB;
+            }
+        }
+    });
+}
 
-    if (typeof jsonObject.Title === 'undefined' || jsonObject.Title === null) {
-        alert("No valid Information found!");
-        return;
+function settingsChanged() {
+    var setting_incognito = document.getElementById('check_setting_incognito').checked;
+    var setting_useIMDB = document.getElementById('check_setting_useIMDB').checked;
+
+    var newPoster = false;
+    //get new poster id's
+    if(userSettings.useIMDB != setting_useIMDB){
+        newPoster = true;
     }
 
-    var strippedJsonObject = {
-        "Title": jsonObject.Title,
-        "imdbID": jsonObject.imdbID,
-        "Poster": jsonObject.Poster,
-        "Season": 1,
-        "Episode": 1,
-        "favURL": ""
-    };
+    userSettings.incognito = setting_incognito;
+    userSettings.useIMDB = setting_useIMDB;
 
-    userSeriesList.push(strippedJsonObject);
-    saveChanges();
-    loadData();
+    chrome.storage.sync.set({
+        'user_settings': userSettings,
+    }, function() {
+        //not really do anything anytime you save
+    });
+
+    if(newPoster){
+        refreshInfo();
+    }
 
 }
 
+function refreshInfo(){
+
+    for (i = 0; i < userSeriesList.length; i++) {
+        if(userSettings.useIMDB){
+            getImdbInfo(userSeriesList[i].imdbID,false);
+        }else{
+            getTvmazeInfo(userSeriesList[i].imdbID,false);
+        }
+    }
+
+    alert(chrome.i18n.getMessage("info_newData"));
+    setTimeout(function(){loadData()}, 10000);
+}
+
+/*
+    backup/import functions
+*/
 function exportJSON() {
     document.getElementById('txt_IOData').value = JSON.stringify(userSeriesList);;
 
@@ -428,10 +543,19 @@ function importJSON() {
     var jsonString = document.getElementById('txt_IOData').value;
     userSeriesList = JSON.parse(jsonString);
 
+    //refreshInfo();
     saveChanges();
-    loadData();
-
     document.getElementById('txt_IOData').value = "";
+}
+
+/*
+    utility & debug functions
+*/
+function openOptionsPage() {
+
+    chrome.tabs.create({
+        'url': 'chrome-extension://' + chrome.runtime.id + "/options.html"
+    });
 }
 
 function clearStorage() {
