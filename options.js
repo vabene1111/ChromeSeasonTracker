@@ -34,6 +34,8 @@ function setupEVH() {
         //document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
         document.getElementById('btn_refreshInfo').addEventListener('click', refreshInfo);
 
+        //reactivate
+        document.getElementById('btn_setActive').addEventListener('click', activateSeries);
 
         //import/export
         document.getElementById('btn_exportJSON').addEventListener('click', exportJSON);
@@ -59,6 +61,7 @@ function loadStrings() {
         //buttons
         document.getElementById('btn_getImdbData').innerHTML = chrome.i18n.getMessage("string_addIMDB");
         document.getElementById('btn_refreshInfo').innerHTML = chrome.i18n.getMessage("string_refreshInfo");
+        document.getElementById('btn_setActive').innerHTML = chrome.i18n.getMessage("string_setActiv");
 
         //settigns
         document.getElementById('h_settings').innerHTML = chrome.i18n.getMessage("string_settings");
@@ -168,7 +171,7 @@ function loadData() {
 
             //delete/url button
             var cell_delete = document.createElement('td');
-            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> <button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL"); + "</button>";
+            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> <button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL") + "</button>" + "</button> <button id='btn_setInaktiv_" + i + "' class='btn btn-warning'>" + chrome.i18n.getMessage("string_inaktiv"); + "</button>";
 
             //episode + season tracker
             var cell_tracker = document.createElement('td');
@@ -203,6 +206,7 @@ function loadData() {
             if (!popup) {
                 document.getElementById('btn_delete_' + i).addEventListener('click', tableDeleteClick);
                 document.getElementById('btn_setUrl_' + i).addEventListener('click', tableSetUrlClick);
+                document.getElementById('btn_setInaktiv_' + i).addEventListener('click', tableSetInaktivClick);
             }
 
             document.getElementById('btn_season_add_' + i).addEventListener('click', tableTrackerClick);
@@ -231,6 +235,22 @@ function loadData() {
 
     });
 
+
+    chrome.storage.sync.get("inaktive_list", function(obj) {
+        if (typeof obj.inaktive_list === 'undefined' || obj.inaktive_list === null) {
+            userInaktivSeriesList = [];
+        } else {
+            userInaktivSeriesList = obj.inaktive_list;
+        }
+
+        if(!popup){
+            drop_inactiveSeries.innerHTML = "";
+            for(i = 0; i < userInaktivSeriesList.length; i++){
+                drop_inactiveSeries.innerHTML += "<option value='"+ i +"'>" + userInaktivSeriesList[i].Title + "</option>";
+            }
+        }
+
+    });
 }
 
 function openFavURL() {
@@ -337,6 +357,31 @@ function tableSetUrlClick(e) {
     }
 
 
+}
+
+function tableSetInaktivClick(e) {
+    var btn_id = this.id;
+    var i = btn_id.replace('btn_setInaktiv_', '');
+
+    userInaktivSeriesList.push(userSeriesList[i]);
+
+    userSeriesList.splice(i,1);
+
+    saveChanges();
+    loadData();
+
+}
+
+function activateSeries(){
+
+    var i = document.getElementById('drop_inactiveSeries').value;
+
+    userSeriesList.push(userInaktivSeriesList[i]);
+
+    userInaktivSeriesList.splice(i,1);
+
+    saveChanges();
+    loadData();
 }
 
 /*
@@ -463,7 +508,8 @@ function saveChanges() {
 
     // Save it using the Chrome extension storage API.
     chrome.storage.sync.set({
-        'series_list': userSeriesList
+        'series_list': userSeriesList,
+        'inaktive_list' : userInaktivSeriesList
     }, function() {
         //not really do anything anytime you save
     });
@@ -530,7 +576,14 @@ function refreshInfo(){
     backup/import functions
 */
 function exportJSON() {
-    document.getElementById('txt_IOData').value = JSON.stringify(userSeriesList);;
+
+    var jsonObj = {"active_series": "" , "inactive_series" : "" , "settings":""};
+    jsonObj.active_series = userSeriesList;
+    jsonObj.inactive_series = userInaktivSeriesList;
+    jsonObj.settings = userSettings;
+
+    var jsonString = JSON.stringify(jsonObj);
+    document.getElementById('txt_IOData').value = jsonString;
 
     var copyDiv = document.getElementById('txt_IOData');
     copyDiv.focus();
@@ -541,10 +594,15 @@ function exportJSON() {
 
 function importJSON() {
     var jsonString = document.getElementById('txt_IOData').value;
-    userSeriesList = JSON.parse(jsonString);
+    jsonObj = JSON.parse(jsonString);
 
-    //refreshInfo();
-    saveChanges();
+     userSeriesList = jsonObj.active_series;
+     userInaktivSeriesList = jsonObj.inactive_series;
+     userSettings = jsonObj.settings;
+
+
+    refreshInfo();
+
     document.getElementById('txt_IOData').value = "";
 }
 

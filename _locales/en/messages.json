@@ -68,6 +68,12 @@
       },
       "string_refreshInfo": {
           "message": "Refresh Series"
+      },
+      "string_inaktiv": {
+          "message": "Inaktiv"
+      },
+      "string_setActiv": {
+          "message": "Set Activ"
       }
 
 
