@@ -171,7 +171,19 @@ function loadData() {
 
             //delete/url button
             var cell_delete = document.createElement('td');
-            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> <button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL") + "</button>" + "</button> <button id='btn_setInaktiv_" + i + "' class='btn btn-warning'>" + chrome.i18n.getMessage("string_inaktiv"); + "</button>";
+            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> "+
+            "<button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL") + "</button> " +
+            "<button id='btn_setInaktiv_" + i + "' class='btn btn-warning'>" + chrome.i18n.getMessage("string_inaktiv") + "</button> ";
+
+            var btnUp = "<button id='btn_moveUp_" + i + "' class='btn btn-info'>&#9650;</button> ";
+            var btnDown = "<button id='btn_moveDown_" + i + "' class='btn btn-info'>&#9660;</button> ";
+            if(i == (userSeriesList.length - 1)){
+                cell_delete.innerHTML += btnUp;
+            }else if(i == 0){
+                cell_delete.innerHTML += btnDown;
+            }else {
+                cell_delete.innerHTML += btnUp + btnDown;
+            }
 
             //episode + season tracker
             var cell_tracker = document.createElement('td');
@@ -207,6 +219,15 @@ function loadData() {
                 document.getElementById('btn_delete_' + i).addEventListener('click', tableDeleteClick);
                 document.getElementById('btn_setUrl_' + i).addEventListener('click', tableSetUrlClick);
                 document.getElementById('btn_setInaktiv_' + i).addEventListener('click', tableSetInaktivClick);
+
+                if(i == (userSeriesList.length - 1)){
+                    document.getElementById('btn_moveUp_' + i).addEventListener('click', tableMoveUpClick);
+                }else if(i == 0){
+                    document.getElementById('btn_moveDown_' + i).addEventListener('click', tableMoveDownClick);
+                }else {
+                    document.getElementById('btn_moveUp_' + i).addEventListener('click', tableMoveUpClick);
+                    document.getElementById('btn_moveDown_' + i).addEventListener('click', tableMoveDownClick);
+                }
             }
 
             document.getElementById('btn_season_add_' + i).addEventListener('click', tableTrackerClick);
@@ -366,6 +387,34 @@ function tableSetInaktivClick(e) {
     userInaktivSeriesList.push(userSeriesList[i]);
 
     userSeriesList.splice(i,1);
+
+    saveChanges();
+    loadData();
+
+}
+
+function tableMoveUpClick(e) {
+    var btn_id = this.id;
+    var i = btn_id.replace('btn_moveUp_', '');
+    i = parseInt(i);
+
+    var element = userSeriesList[i];
+    userSeriesList.splice(i,1);
+    userSeriesList.splice((i - 1),0,element);
+
+    saveChanges();
+    loadData();
+
+}
+
+function tableMoveDownClick(e) {
+    var btn_id = this.id;
+    var i = btn_id.replace('btn_moveDown_', '');
+    i = parseInt(i);
+
+    var element = userSeriesList[i];
+    userSeriesList.splice(i,1);
+    userSeriesList.splice((i + 1),0,element);
 
     saveChanges();
     loadData();
@@ -566,6 +615,11 @@ function refreshInfo(){
         }else{
             getTvmazeInfo(userSeriesList[i].imdbID,false);
         }
+    }
+
+    if(!popup){
+        document.getElementById('check_setting_incognito').checked = userSettings.incognito;
+        document.getElementById('check_setting_useIMDB').checked = userSettings.useIMDB;
     }
 
     alert(chrome.i18n.getMessage("info_newData"));
