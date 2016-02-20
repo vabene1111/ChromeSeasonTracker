@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
 */
 
 function setupEVH() {
-    if(!popup){
+    if (!popup) {
         //click imdb search
         document.getElementById('btn_getImdbData').addEventListener('click', getSeriesData);
         //document.getElementById('btn_clearStorage').addEventListener('click', clearStorage);
@@ -49,12 +49,12 @@ function setupEVH() {
 }
 
 function loadStrings() {
-    if(!popup){
+    if (!popup) {
         //title
         document.getElementById('info_title').innerHTML = chrome.i18n.getMessage("manifest_name");
 
         //import/export
-        document.getElementById('txt_IOData').setAttribute('placeholder',chrome.i18n.getMessage("info_importExport"));
+        document.getElementById('txt_IOData').setAttribute('placeholder', chrome.i18n.getMessage("info_importExport"));
         document.getElementById('btn_exportJSON').innerHTML = chrome.i18n.getMessage("string_export");
         document.getElementById('btn_importJSON').innerHTML = chrome.i18n.getMessage("string_import");
 
@@ -86,10 +86,20 @@ function searchNew() {
             if (this.readyState == 4 && this.status == 200) {
                 var jsObj = JSON.parse(this.responseText);
 
-                    var date = new Date(String(jsObj.airdate));
-                    document.getElementById('lbl_newEpisode_' + this.data).innerHTML = chrome.i18n.getMessage("string_nextEpisode") + date.toLocaleDateString();
+                var date = new Date(String(jsObj.airdate));
 
-            }if(this.readyState == 4 && this.status == 404){
+                var today = new Date();
+                var dd = today.getDate();
+                var mm = today.getMonth()+1; //January is 0!
+                var yyyy = today.getFullYear();
+
+                if(today > date){
+                    document.getElementById('lbl_newEpisode_' + this.data).innerHTML = "<font color=green>" + chrome.i18n.getMessage("string_nextEpisode") + date.toLocaleDateString() + "</font>";
+                }else{
+                    document.getElementById('lbl_newEpisode_' + this.data).innerHTML = chrome.i18n.getMessage("string_nextEpisode") + date.toLocaleDateString();
+                }
+            }
+            if (this.readyState == 4 && this.status == 404) {
                 searchRetry(this.data);
             }
         }
@@ -100,7 +110,7 @@ function searchNew() {
 
 }
 
-function searchRetry(i){
+function searchRetry(i) {
 
     var nextSeason = parseInt(userSeriesList[i].Season) + 1;
     var searchRetryUrl = "http://api.tvmaze.com/shows/" + userSeriesList[i].tvmazeID + "/episodebynumber?season=" + nextSeason + "&number=" + 1;
@@ -112,7 +122,16 @@ function searchRetry(i){
             var jsObj = JSON.parse(this.responseText);
 
             var date = new Date(String(jsObj.airdate));
-            document.getElementById('lbl_newEpisode_' + this.data).innerHTML = chrome.i18n.getMessage("string_nextSeason") + date.toLocaleDateString();
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+
+            if(today > date){
+                document.getElementById('lbl_newEpisode_' + this.data).innerHTML = "<font color=green>" + chrome.i18n.getMessage("string_nextEpisode") + date.toLocaleDateString() + "</font>";
+            }else{
+                document.getElementById('lbl_newEpisode_' + this.data).innerHTML = chrome.i18n.getMessage("string_nextEpisode") + date.toLocaleDateString();
+            }
 
         }
     }
@@ -165,23 +184,26 @@ function loadData() {
             }
             cell_img.appendChild(img);
 
-            //info
+            //info: title/imdb/tvmaze/releasedate
             var cell_info = document.createElement('td');
-            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/><a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>IMDB</a> - <a target='_blank' href='http://www.tvmaze.com/shows/" + userSeriesList[i].tvmazeID + "'>TVmaze</a><br/> <label id='lbl_newEpisode_" + i + "'>" + chrome.i18n.getMessage("string_nothingNew") + "</label>";
+            cell_info.innerHTML = "Title: " + userSeriesList[i].Title + "<br/>" + //Title
+                "<a target='_blank' href='http://www.imdb.com/title/" + userSeriesList[i].imdbID + "/'>IMDB</a> -" + //IMDB link
+                "<a target='_blank' href='http://www.tvmaze.com/shows/" + userSeriesList[i].tvmazeID + "'>TVmaze</a><br/>" + //tvmaze link
+                "<label id='lbl_newEpisode_" + i + "'>" + chrome.i18n.getMessage("string_nothingNew") + "</label>"; //next episode label
 
-            //delete/url button
+            //buttons: delete/url change/inactivate/move Up/move Down
             var cell_delete = document.createElement('td');
-            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> "+
-            "<button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL") + "</button> " +
-            "<button id='btn_setInaktiv_" + i + "' class='btn btn-warning'>" + chrome.i18n.getMessage("string_inaktiv") + "</button> ";
+            cell_delete.innerHTML = "<button id='btn_delete_" + i + "' class='btn btn-danger'>" + chrome.i18n.getMessage("string_delete") + "</button> " +  //delete
+                "<button id='btn_setUrl_" + i + "' class='btn btn-success'>" + chrome.i18n.getMessage("string_setURL") + "</button> " +     //change Url
+                "<button id='btn_setInaktiv_" + i + "' class='btn btn-warning'>" + chrome.i18n.getMessage("string_inaktiv") + "</button> ";     //inactivate
 
             var btnUp = "<button id='btn_moveUp_" + i + "' class='btn btn-info'>&#9650;</button> ";
             var btnDown = "<button id='btn_moveDown_" + i + "' class='btn btn-info'>&#9660;</button> ";
-            if(i == (userSeriesList.length - 1)){
+            if (i == (userSeriesList.length - 1)) {
                 cell_delete.innerHTML += btnUp;
-            }else if(i == 0){
+            } else if (i == 0) {
                 cell_delete.innerHTML += btnDown;
-            }else {
+            } else {
                 cell_delete.innerHTML += btnUp + btnDown;
             }
 
@@ -220,11 +242,11 @@ function loadData() {
                 document.getElementById('btn_setUrl_' + i).addEventListener('click', tableSetUrlClick);
                 document.getElementById('btn_setInaktiv_' + i).addEventListener('click', tableSetInaktivClick);
 
-                if(i == (userSeriesList.length - 1)){
+                if (i == (userSeriesList.length - 1)) {
                     document.getElementById('btn_moveUp_' + i).addEventListener('click', tableMoveUpClick);
-                }else if(i == 0){
+                } else if (i == 0) {
                     document.getElementById('btn_moveDown_' + i).addEventListener('click', tableMoveDownClick);
-                }else {
+                } else {
                     document.getElementById('btn_moveUp_' + i).addEventListener('click', tableMoveUpClick);
                     document.getElementById('btn_moveDown_' + i).addEventListener('click', tableMoveDownClick);
                 }
@@ -247,10 +269,12 @@ function loadData() {
         }
 
 
-        if(checkTvmazeID()){
+        if (checkTvmazeID()) {
             alert(chrome.i18n.getMessage("info_dataChanged"));
-            setTimeout(function(){loadData}, 10000);
-        }else{
+            setTimeout(function() {
+                loadData
+            }, 10000);
+        } else {
             searchNew();
         }
 
@@ -264,10 +288,10 @@ function loadData() {
             userInaktivSeriesList = obj.inaktive_list;
         }
 
-        if(!popup){
+        if (!popup) {
             drop_inactiveSeries.innerHTML = "";
-            for(i = 0; i < userInaktivSeriesList.length; i++){
-                drop_inactiveSeries.innerHTML += "<option value='"+ i +"'>" + userInaktivSeriesList[i].Title + "</option>";
+            for (i = 0; i < userInaktivSeriesList.length; i++) {
+                drop_inactiveSeries.innerHTML += "<option value='" + i + "'>" + userInaktivSeriesList[i].Title + "</option>";
             }
         }
 
@@ -386,7 +410,7 @@ function tableSetInaktivClick(e) {
 
     userInaktivSeriesList.push(userSeriesList[i]);
 
-    userSeriesList.splice(i,1);
+    userSeriesList.splice(i, 1);
 
     saveChanges();
     loadData();
@@ -399,8 +423,8 @@ function tableMoveUpClick(e) {
     i = parseInt(i);
 
     var element = userSeriesList[i];
-    userSeriesList.splice(i,1);
-    userSeriesList.splice((i - 1),0,element);
+    userSeriesList.splice(i, 1);
+    userSeriesList.splice((i - 1), 0, element);
 
     saveChanges();
     loadData();
@@ -413,21 +437,21 @@ function tableMoveDownClick(e) {
     i = parseInt(i);
 
     var element = userSeriesList[i];
-    userSeriesList.splice(i,1);
-    userSeriesList.splice((i + 1),0,element);
+    userSeriesList.splice(i, 1);
+    userSeriesList.splice((i + 1), 0, element);
 
     saveChanges();
     loadData();
 
 }
 
-function activateSeries(){
+function activateSeries() {
 
     var i = document.getElementById('drop_inactiveSeries').value;
 
     userSeriesList.push(userInaktivSeriesList[i]);
 
-    userInaktivSeriesList.splice(i,1);
+    userInaktivSeriesList.splice(i, 1);
 
     saveChanges();
     loadData();
@@ -437,7 +461,7 @@ function activateSeries(){
     functions for IMDB integration
 */
 
-function imdbCallback(jsonString,instant) {
+function imdbCallback(jsonString, instant) {
     var jsonObject = JSON.parse(jsonString);
 
     if (typeof jsonObject.Title === 'undefined' || jsonObject.Title === null) {
@@ -445,12 +469,12 @@ function imdbCallback(jsonString,instant) {
         return;
     }
 
-    for (i = 0; i<userSeriesList.length; i++){
-        if(userSeriesList[i].imdbID == jsonObject.imdbID){
+    for (i = 0; i < userSeriesList.length; i++) {
+        if (userSeriesList[i].imdbID == jsonObject.imdbID) {
             userSeriesList[i].Title = jsonObject.Title;
             userSeriesList[i].Poster = jsonObject.Poster;
 
-            getTvmazeInfo(userSeriesList[i].imdbID,instant);
+            getTvmazeInfo(userSeriesList[i].imdbID, instant);
         }
     }
 }
@@ -471,10 +495,10 @@ function getSeriesData(e) {
 
     userSeriesList.push(strippedJsonObject);
 
-    if(userSettings.useIMDB){
-        getImdbInfo(imdbId,true);
-    }else{
-        getTvmazeInfo(imdbId,true);
+    if (userSettings.useIMDB) {
+        getImdbInfo(imdbId, true);
+    } else {
+        getTvmazeInfo(imdbId, true);
     }
 
 }
@@ -483,7 +507,7 @@ function getSeriesData(e) {
     function for tvmaze integration
 */
 
-function getImdbInfo(imdbId, instant){
+function getImdbInfo(imdbId, instant) {
     var url = "http://www.omdbapi.com/?i=" + imdbId + "&plot=short&r=json";
 
     //initiate XMLHttpRequest
@@ -491,14 +515,14 @@ function getImdbInfo(imdbId, instant){
     xhr.open("GET", url, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
-            imdbCallback(xhr.responseText,this.data);
+            imdbCallback(xhr.responseText, this.data);
         }
     }
     xhr.data = instant;
     xhr.send();
 }
 
-function getTvmazeInfo(imdbId, instant){
+function getTvmazeInfo(imdbId, instant) {
 
     var url = "http://api.tvmaze.com/lookup/shows?imdb=" + imdbId;
 
@@ -507,7 +531,7 @@ function getTvmazeInfo(imdbId, instant){
     xhr.open("GET", url, true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
-            tvmazeCallback(xhr.responseText,this.data);
+            tvmazeCallback(xhr.responseText, this.data);
         }
     }
     xhr.data = instant;
@@ -515,13 +539,13 @@ function getTvmazeInfo(imdbId, instant){
 
 }
 
-function tvmazeCallback(jsonString,instant){
+function tvmazeCallback(jsonString, instant) {
     var jsonObject = JSON.parse(jsonString);
 
-    for (i = 0; i<userSeriesList.length; i++){
-        if(userSeriesList[i].imdbID == jsonObject.externals.imdb){
+    for (i = 0; i < userSeriesList.length; i++) {
+        if (userSeriesList[i].imdbID == jsonObject.externals.imdb) {
             userSeriesList[i].tvmazeID = jsonObject.id;
-            if(!userSettings.useIMDB){
+            if (!userSettings.useIMDB) {
                 userSeriesList[i].Title = jsonObject.name;
                 userSeriesList[i].Poster = jsonObject.image.medium;
             }
@@ -530,19 +554,19 @@ function tvmazeCallback(jsonString,instant){
 
     saveChanges();
 
-    if(instant){
+    if (instant) {
         loadData();
     }
 }
 
 
-function checkTvmazeID(){
+function checkTvmazeID() {
     missing = false;
     for (i = 0; i < userSeriesList.length; i++) {
-        if(userSettings.useIMDB){
-            getImdbInfo(userSeriesList[i].imdbID,false);
-        }else{
-            getTvmazeInfo(userSeriesList[i].imdbID,false);
+        if (userSettings.useIMDB) {
+            getImdbInfo(userSeriesList[i].imdbID, false);
+        } else {
+            getTvmazeInfo(userSeriesList[i].imdbID, false);
         }
     }
 
@@ -558,7 +582,7 @@ function saveChanges() {
     // Save it using the Chrome extension storage API.
     chrome.storage.sync.set({
         'series_list': userSeriesList,
-        'inaktive_list' : userInaktivSeriesList
+        'inaktive_list': userInaktivSeriesList
     }, function() {
         //not really do anything anytime you save
     });
@@ -574,7 +598,7 @@ function loadSettings() {
         } else {
             userSettings = obj.user_settings;
 
-            if(!popup){
+            if (!popup) {
                 document.getElementById('check_setting_incognito').checked = userSettings.incognito;
                 document.getElementById('check_setting_useIMDB').checked = userSettings.useIMDB;
             }
@@ -588,7 +612,7 @@ function settingsChanged() {
 
     var newPoster = false;
     //get new poster id's
-    if(userSettings.useIMDB != setting_useIMDB){
+    if (userSettings.useIMDB != setting_useIMDB) {
         newPoster = true;
     }
 
@@ -601,29 +625,28 @@ function settingsChanged() {
         //not really do anything anytime you save
     });
 
-    if(newPoster){
+    if (newPoster) {
         refreshInfo();
     }
 
 }
 
-function refreshInfo(){
+function refreshInfo() {
 
     for (i = 0; i < userSeriesList.length; i++) {
-        if(userSettings.useIMDB){
-            getImdbInfo(userSeriesList[i].imdbID,false);
-        }else{
-            getTvmazeInfo(userSeriesList[i].imdbID,false);
+        if (userSettings.useIMDB) {
+            getImdbInfo(userSeriesList[i].imdbID, false);
+        } else {
+            getTvmazeInfo(userSeriesList[i].imdbID, false);
         }
     }
 
-    if(!popup){
-        document.getElementById('check_setting_incognito').checked = userSettings.incognito;
-        document.getElementById('check_setting_useIMDB').checked = userSettings.useIMDB;
-    }
 
     alert(chrome.i18n.getMessage("info_newData"));
-    setTimeout(function(){loadData()}, 10000);
+    setTimeout(function() {
+        loadData();
+        loadSettings();
+    }, 10000);
 }
 
 /*
@@ -631,7 +654,11 @@ function refreshInfo(){
 */
 function exportJSON() {
 
-    var jsonObj = {"active_series": "" , "inactive_series" : "" , "settings":""};
+    var jsonObj = {
+        "active_series": "",
+        "inactive_series": "",
+        "settings": ""
+    };
     jsonObj.active_series = userSeriesList;
     jsonObj.inactive_series = userInaktivSeriesList;
     jsonObj.settings = userSettings;
@@ -650,10 +677,18 @@ function importJSON() {
     var jsonString = document.getElementById('txt_IOData').value;
     jsonObj = JSON.parse(jsonString);
 
-     userSeriesList = jsonObj.active_series;
-     userInaktivSeriesList = jsonObj.inactive_series;
-     userSettings = jsonObj.settings;
+    userSeriesList = jsonObj.active_series;
+    userInaktivSeriesList = jsonObj.inactive_series;
+    userSettings = jsonObj.settings;
 
+    // Save it using the Chrome extension storage API.
+    chrome.storage.sync.set({
+        'series_list': userSeriesList,
+        'inaktive_list': userInaktivSeriesList,
+        'user_settings' : userSettings
+    }, function() {
+        //not really do anything anytime you save
+    });
 
     refreshInfo();
 
