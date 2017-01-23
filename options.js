@@ -164,7 +164,11 @@ function loadData() {
             var action = chrome.i18n.getMessage("string_action");
             var tracker = chrome.i18n.getMessage("string_tracker");
             var open = chrome.i18n.getMessage("string_open");
-            table.innerHTML = "<thead><td>" + poster + "</td><td>" + desc + "</td><td>" + action + "</td><td>" + tracker + "</td><td>" + open + "</td></thead>";
+            var headString = "<thead><td>" + poster + "</td><td>" + desc + "</td><td>" + action + "</td><td>" + tracker + "</td>";
+            if (popup) {
+              headString += "<td>" + open + "</td>";
+            }
+            table.innerHTML = headString + "</thead>";
         }
 
 
@@ -211,22 +215,24 @@ function loadData() {
             var cell_tracker = document.createElement('td');
 
             cell_tracker.innerHTML = " <div class='row'> " +
-                "<div class='form-inline'>" +
-                "<button class='btn' id='btn_season_sub_" + i + "'>-</button>" +
-                "<input type='text' class='form-control' id='in_curSeason_" + i + "' value='" + userSeriesList[i].Season + "' size='4'>" +
-                "<button class='btn' id='btn_season_add_" + i + "'>+</button>" +
+                "<div class='input-group'>" +
+                "<span class='input-group-btn'><button class='btn' id='btn_season_sub_" + i + "'>-</button></span>" +
+                "<input type='text' class='form-control' id='in_curSeason_" + i + "' value='" + userSeriesList[i].Season + "' size='3'>" +
+                "<span class='input-group-btn'><button class='btn' id='btn_season_add_" + i + "'>+</button></span>" +
                 "</div>" +
 
-                "<div class='form-inline'>" +
-                "<button class='btn' id='btn_episode_sub_" + i + "'>-</button>" +
-                "<input type='text' class='form-control' id='in_curEpisode_" + i + "' value='" + userSeriesList[i].Episode + "' size='4'>" +
-                "<button class='btn' id='btn_episode_add_" + i + "'>+</button>" +
+                "<div class='input-group'>" +
+                "<span class='input-group-btn'><button class='btn' id='btn_episode_sub_" + i + "'>-</button></span>" +
+                "<input type='text' class='form-control' id='in_curEpisode_" + i + "' value='" + userSeriesList[i].Episode + "' size='3'>" +
+                "<span class='input-group-btn'><button class='btn' id='btn_episode_add_" + i + "'>+</button></span>" +
                 "</div>" +
                 "</div>";
 
             //open Button
+
             var cell_favURL = document.createElement('td');
             cell_favURL.innerHTML = "<button id='btn_open_" + i + "' class='btn btn-info'>" + chrome.i18n.getMessage("string_open"); + "</button>";
+
 
             row.appendChild(cell_img);
             row.appendChild(cell_info);
@@ -234,7 +240,9 @@ function loadData() {
                 row.appendChild(cell_delete);
             }
             row.appendChild(cell_tracker);
-            row.appendChild(cell_favURL);
+            if (popup) {
+              row.appendChild(cell_favURL);
+            };
             table.appendChild(row);
 
             if (!popup) {
@@ -256,9 +264,9 @@ function loadData() {
             document.getElementById('btn_season_sub_' + i).addEventListener('click', tableTrackerClick);
             document.getElementById('btn_episode_add_' + i).addEventListener('click', tableTrackerClick);
             document.getElementById('btn_episode_sub_' + i).addEventListener('click', tableTrackerClick);
-
-            document.getElementById('btn_open_' + i).addEventListener('click', openFavURL);
-
+            if(popup){
+              document.getElementById('btn_open_' + i).addEventListener('click', openFavURL);
+            }
             document.getElementById('in_curEpisode_' + i).addEventListener('keyup', tableEpisodeChange);
             document.getElementById('in_curSeason_' + i).addEventListener('keyup', tableSeasonChange);
         }
